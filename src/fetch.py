@@ -1,0 +1,50 @@
+from __future__ import annotations
+import feedparser
+from dataclasses import dataclass
+from typing import List
+from datetime import datetime, timezone
+from dateutil import parser as dtparser
+from .queries import NEWS_QUERIES
+
+GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
+
+@dataclass
+class NewsItem:
+    title: str
+    url: str
+    published_at: datetime | None
+    source: str
+
+def _parse_dt(s: str | None) -> datetime | None:
+    if not s:
+        return None
+    try:
+        dt = dtparser.parse(s)
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+def fetch_news() -> List[NewsItem]:
+    items: List[NewsItem] = []
+    seen: set[str] = set()
+
+    for q in NEWS_QUERIES:
+        feed_url = GOOGLE_NEWS_RSS.format(q=q.replace(" ", "%20"))
+        feed = feedparser.parse(feed_url)
+
+        for e in feed.entries:
+            title = getattr(e, "title", "").strip()
+            link = getattr(e, "link", "").strip()
+            published = _parse_dt(getattr(e, "published", None))
+            source = ""
+            if hasattr(e, "source") and e.source:
+                source = getattr(e.source, "title", "") or ""
+            if not link or link in seen:
+                continue
+            seen.add(link)
+            items.append(NewsItem(title=title, url=link, published_at=published, source=source))
+
+    items.sort(key=lambda x: x.published_at or datetime(1970, 1, 1, tzinfo=timezone.utc), reverse=True)
+    return items
