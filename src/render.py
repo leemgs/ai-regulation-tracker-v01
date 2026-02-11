@@ -144,9 +144,11 @@ def render_markdown(
         else:
             lines.append("820 사건 없음\n")
 
-        # 📁 Others (동일 크기 + fold)
+        # 📁 Others (h2 크기 스타일 적용)
         lines.append("\n<details>")
-        lines.append("<summary><strong>📁 Others</strong></summary>\n")
+        lines.append(
+            '<summary><span style="font-size:1.5em; font-weight:bold;">📁 Others</span></summary>\n'
+        )
 
         if other_cases:
             render_table(other_cases)
@@ -159,40 +161,4 @@ def render_markdown(
     # 📄 RECAP 문서
     # =====================================================
     if cl_docs:
-        lines.append("## 📄 RECAP 문서 기반 (Complaint/Petition 우선)")
-        lines.append("| 제출일 | 케이스 | 문서유형 | 문서 |")
-        lines.append(_md_sep(4))
-
-        for d in sorted(cl_docs, key=lambda x: x.date_filed, reverse=True)[:20]:
-            link = d.document_url or d.pdf_url
-            lines.append(
-                f"| {_esc(d.date_filed)} | {_esc(d.case_name)} | {_esc(d.doc_type)} | {_mdlink('Document', link)} |"
-            )
-
-        lines.append("")
-
-    # =====================================================
-    # 📰 기사 주소 (Fold 처리)
-    # =====================================================
-    if lawsuits:
-        lines.append("<details>")
-        lines.append("<summary><strong>📰 기사 주소</strong></summary>\n")
-
-        for s in lawsuits:
-            if (s.case_title and s.case_title != "미확인") and (
-                s.article_title and s.article_title != s.case_title
-            ):
-                header_title = f"{s.case_title} / {s.article_title}"
-            elif s.case_title and s.case_title != "미확인":
-                header_title = s.case_title
-            else:
-                header_title = s.article_title or s.case_title
-
-            lines.append(f"### {_esc(header_title)}")
-            for u in s.article_urls:
-                lines.append(f"- {u}")
-            lines.append("")
-
-        lines.append("</details>\n")
-
-    return "\n".join(lines)
+        lines.append("## 📄 RECAP 문서 기반 (Complaint/Petiti
