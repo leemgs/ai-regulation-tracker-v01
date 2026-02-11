@@ -203,13 +203,21 @@ def build_documents_from_docket_ids(docket_ids: List[int], days: int = 3) -> Lis
     hits = [{"docket_id": did} for did in docket_ids]
     return build_complaint_documents_from_hits(hits)
 
+def build_complaint_documents_from_hits(
+    hits: List[dict],
+    days: int = 3
+) -> List[CLDocument]:
 
-def build_complaint_documents_from_hits(hits: List[dict]) -> List[CLDocument]:
     out = []
+
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=days)
+
     for hit in hits:
         did = _pick_docket_id(hit)
         if not did:
             continue
+
         docket = _get(DOCKET_URL.format(id=did)) or {}
         case_name = _safe_str(docket.get("case_name")) or "미확인"
         docket_number = _safe_str(docket.get("docket_number")) or "미확인"
@@ -223,6 +231,15 @@ def build_complaint_documents_from_hits(hits: List[dict]) -> List[CLDocument]:
             if not any(k in desc for k in COMPLAINT_KEYWORDS):
                 continue
 
+            date_filed = _safe_str(d.get("date_filed"))[:10]
+            if date_filed:
+                try:
+                    dt = datetime.fromisoformat(date_filed).replace(tzinfo=timezone.utc)
+                    if dt < cutoff:
+                        continue
+                except Exception:
+                    pass
+
             pdf_url = _abs_url(d.get("filepath_local") or "")
             snippet = extract_pdf_text(pdf_url, max_chars=3000) if pdf_url else ""
 
@@ -235,7 +252,7 @@ def build_complaint_documents_from_hits(hits: List[dict]) -> List[CLDocument]:
                 docket_number=docket_number,
                 case_name=case_name,
                 court=court,
-                date_filed=_safe_str(d.get("date_filed"))[:10],
+                date_filed=date_filed,
                 doc_type="Complaint",
                 doc_number=_safe_str(d.get("document_number")),
                 description=_safe_str(d.get("description")),
@@ -247,6 +264,7 @@ def build_complaint_documents_from_hits(hits: List[dict]) -> List[CLDocument]:
                 extracted_causes=", ".join(causes) if causes else "미확인",
                 extracted_ai_snippet=ai_snip,
             ))
+
     return out
 
 
