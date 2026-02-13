@@ -170,7 +170,16 @@ def _extract_first_pdf_from_docket_html(docket_id: int) -> str:
     Fetch docket HTML page and extract the first PDF link.
     """
     try:
-        url = f"{BASE}/docket/{docket_id}/"
+        # 🔥 1. 먼저 API에서 정확한 도켓 URL(slug 포함)을 얻는다
+        docket_meta = _get(DOCKET_URL.format(id=docket_id))
+        if not docket_meta:
+            return ""
+
+        absolute_url = docket_meta.get("absolute_url")
+        if not absolute_url:
+            return ""
+
+        url = BASE + absolute_url
 
         headers = {
             "User-Agent": (
@@ -183,31 +192,21 @@ def _extract_first_pdf_from_docket_html(docket_id: int) -> str:
             "Connection": "keep-alive",
         }
 
-        r = requests.get(url, headers=headers, timeout=25)
+        r = requests.get(url, headers=headers, timeout=25, allow_redirects=True)
         if r.status_code != 200:
             return ""
 
         html = r.text
 
-        # 1️⃣ 절대 URL 먼저 탐색
+        # 🔥 storage 링크 직접 탐색 (가장 안전)
         match = re.search(
-            r'href="(https://storage\.courtlistener\.com/recap/[^"]+?\.pdf)"',
+            r"https://storage\.courtlistener\.com/recap/[^\"]+?\.pdf",
             html,
             re.IGNORECASE,
         )
 
         if match:
-            return match.group(1)
-
-        # 2️⃣ 상대경로 /recap/... 도 허용
-        match2 = re.search(
-            r'href="(/recap/[^"]+?\.pdf)"',
-            html,
-            re.IGNORECASE,
-        )
-
-        if match2:
-            return STORAGE_BASE + match2.group(1)
+            return match.group(0)
 
         if match:
             return match.group(0)
