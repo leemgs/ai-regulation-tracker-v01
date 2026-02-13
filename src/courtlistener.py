@@ -171,18 +171,43 @@ def _extract_first_pdf_from_docket_html(docket_id: int) -> str:
     """
     try:
         url = f"{BASE}/docket/{docket_id}/"
-        r = requests.get(url, timeout=25)
+
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+        }
+
+        r = requests.get(url, headers=headers, timeout=25)
         if r.status_code != 200:
             return ""
 
         html = r.text
 
-        # Find first storage.courtlistener.com PDF
+        # 1️⃣ 절대 URL 먼저 탐색
         match = re.search(
-            r"https://storage\.courtlistener\.com/recap/[^\"']+?\.pdf",
+            r'href="(https://storage\.courtlistener\.com/recap/[^"]+?\.pdf)"',
             html,
-            re.IGNORECASE
+            re.IGNORECASE,
         )
+
+        if match:
+            return match.group(1)
+
+        # 2️⃣ 상대경로 /recap/... 도 허용
+        match2 = re.search(
+            r'href="(/recap/[^"]+?\.pdf)"',
+            html,
+            re.IGNORECASE,
+        )
+
+        if match2:
+            return STORAGE_BASE + match2.group(1)
 
         if match:
             return match.group(0)
