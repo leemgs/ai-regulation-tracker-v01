@@ -190,7 +190,7 @@ def render_markdown(
             lines.append(
                 "| No. | 상태 | 케이스명 | 도켓번호 | Nature | 위험도 | "
                 "소송이유 | AI학습관련 핵심주장 | 법적 근거 | 담당판사 | 법원 | "
-                "Complaint 문서 번호 | Complaint PDF 링크 | 최근 도켓 업데이트 |"
+                "Complaint 문서 번호 | Complaint PDF 링크 | 최근 도켓 업데이트⬇️ |"
             )
             lines.append(_md_sep(14))
 
