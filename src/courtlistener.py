@@ -293,7 +293,18 @@ def _pick_docket_id(hit: dict) -> Optional[int]:
     for key in ["docket_id", "docketId", "docket"]:
         v = hit.get(key)
         if isinstance(v, int):
+            print(f"[DEBUG] docket_id found directly: {v}")            
             return v
+    # 🔥 NEW: handle string docket URL
+    docket_field = hit.get("docket")
+    if isinstance(docket_field, str):
+        match = re.search(r"/dockets/(\d+)/", docket_field)
+        if match:
+            did = int(match.group(1))
+            print(f"[DEBUG] extracted docket_id from URL: {did}")
+            return did
+    print("[DEBUG] docket_id not found in hit")
+    
     return None
 
 
