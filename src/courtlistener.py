@@ -211,19 +211,29 @@ def _extract_first_pdf_from_docket_html(docket_id: int) -> str:
             return ""
 
         html = r.text
+        print("[DEBUG] HTML length:", len(html))
+        
+        # =====================================================
+        # 🔥 FIX: 절대 URL + 상대 URL 모두 탐지
+        # =====================================================
 
-        # 🔥 storage 링크 직접 탐색 (가장 안전)
+        # 1️⃣ 절대 URL 먼저 탐지
         match = re.search(
             r"https://storage\.courtlistener\.com/recap/[^\"]+?\.pdf",
             html,
             re.IGNORECASE,
         )
-
         if match:
             return match.group(0)
 
+        # 2️⃣ 상대 URL 탐지 (/recap/...)
+        match = re.search(
+            r'href="(/recap/[^"]+?\.pdf)"',
+            html,
+            re.IGNORECASE,
+        )
         if match:
-            return match.group(0)
+            return STORAGE_BASE + match.group(1)
 
     except Exception:
         pass
