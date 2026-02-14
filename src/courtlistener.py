@@ -174,6 +174,52 @@ def _abs_url(u: str) -> str:
         return "https://storage.courtlistener.com/recap/" + u
     return u
 
+# =====================================================
+# NEW: PDF HEAD Validation (403 사전 감지)
+# =====================================================
+
+def _validate_pdf_url(pdf_url: str) -> bool:
+    """
+    PDF 다운로드 전에 HEAD 요청으로 사전 검증
+    """
+    if not pdf_url:
+        return False
+
+    try:
+        print(f"[DEBUG] HEAD check: {pdf_url}")
+
+        r = requests.head(
+            pdf_url,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept": "application/pdf",
+            },
+            timeout=15,
+            allow_redirects=True,
+        )
+
+        print(f"[DEBUG] HEAD status={r.status_code}")
+
+        if r.status_code != 200:
+            print(f"[ERROR] PDF HEAD failed status={r.status_code}")
+            return False
+
+        content_type = r.headers.get("Content-Type", "")
+        content_length = r.headers.get("Content-Length", "unknown")
+
+        print(f"[DEBUG] Content-Type={content_type}")
+        print(f"[DEBUG] Content-Length={content_length}")
+
+        if "pdf" not in content_type.lower():
+            print("[ERROR] HEAD response is not PDF")
+            return False
+
+        return True
+
+    except Exception as e:
+        print(f"[ERROR] HEAD request exception: {type(e).__name__}: {e}")
+        return False
+
 
 # =====================================================
 # NEW: HTML Parsing for PDF (No API Required)
@@ -474,7 +520,13 @@ def build_complaint_documents_from_hits(
             print(f"[DEBUG] document_number={d.get('document_number')}")            
             pdf_url = _abs_url(d.get("filepath_local") or "")
             print(f"[DEBUG] RECAP PDF URL: {pdf_url}")
-            snippet = extract_pdf_text(pdf_url, max_chars=3000) if pdf_url else ""
+            snippet = ""
+
+            if pdf_url and _validate_pdf_url(pdf_url):
+                snippet = extract_pdf_text(pdf_url, max_chars=3000)
+            else:
+                print("[ERROR] PDF validation failed — skipping extraction")
+                print(f"[ERROR] URL: {pdf_url}")
 
             if pdf_url and not snippet:
                 print("[ERROR] PDF parsing FAILED (RECAP)")
@@ -634,7 +686,13 @@ def build_case_summary_from_docket_id(docket_id: int) -> Optional[CLCaseSummary]
     if complaint_link:
         print(f"[DEBUG] Extracting PDF text from: {complaint_link}")     
         print(f"[DEBUG] Starting PDF extraction...")        
-        snippet = extract_pdf_text(complaint_link, max_chars=4000)
+        snippet = ""
+
+        if _validate_pdf_url(complaint_link):
+            snippet = extract_pdf_text(complaint_link, max_chars=4000)
+        else:
+            print("[ERROR] Complaint PDF validation failed")
+            print(f"[ERROR] complaint_link={complaint_link}")
 
         print(f"[DEBUG] PDF snippet length={len(snippet) if snippet else 0}")
 
