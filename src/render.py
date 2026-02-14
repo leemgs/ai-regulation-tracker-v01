@@ -201,12 +201,17 @@ def render_markdown(
                 # 🔥 CLDocument 기반 Complaint 정보 덮어쓰기
                 complaint_doc_no = c.complaint_doc_no
                 complaint_link = c.complaint_link
+                extracted_causes = c.extracted_causes
+                extracted_ai_snippet = c.extracted_ai_snippet                
 
                 if c.docket_id in doc_map:
                     doc = doc_map[c.docket_id]
                     complaint_doc_no = doc.doc_number or doc.doc_type
                     complaint_link = doc.document_url or doc.pdf_url
-                
+                    # 🔥 FIX: 소송이유 / AI학습 핵심주장도 CLDocument 기준으로 덮어쓰기
+                    extracted_causes = doc.extracted_causes or extracted_causes
+                    extracted_ai_snippet = doc.extracted_ai_snippet or extracted_ai_snippet
+
                 if c.court_short_name and c.court_api_url:
                     court_display = _mdlink(c.court_short_name, c.court_api_url)
                 else:
@@ -218,8 +223,8 @@ def render_markdown(
                     f"{_mdlink(c.docket_number, docket_url)} | "
                     f"{_esc(c.nature_of_suit)} | "
                     f"{format_risk(score)} | "
-                    f"{_short(c.extracted_causes, 120)} | "
-                    f"{_short(c.extracted_ai_snippet, 120)} | "
+                    f"{_short(extracted_causes, 120)} | "
+                    f"{_short(extracted_ai_snippet, 120)} | "
                     f"{_esc(c.cause)} | "
                     f"{_esc(c.judge)} | "
                     f"{court_display} | "
