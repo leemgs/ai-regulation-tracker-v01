@@ -419,7 +419,15 @@ def build_complaint_documents_from_hits(
             html_pdf_url = _extract_first_pdf_from_docket_html(did)
 
             if html_pdf_url:
+                print(f"[DEBUG] HTML fallback PDF URL: {html_pdf_url}")                
                 snippet = extract_pdf_text(html_pdf_url, max_chars=3000)
+
+                if not snippet:
+                    print("[ERROR] PDF parsing FAILED (HTML fallback)")
+                    print(f"[ERROR] URL: {html_pdf_url}")
+                else:
+                    print(f"[DEBUG] PDF parsing SUCCESS length={len(snippet)}")
+
 
                 p_ex, d_ex = extract_parties_from_caption(snippet) if snippet else ("미확인", "미확인")
                 print(f"[DEBUG] HTML fallback snippet length={len(snippet) if snippet else 0}")                
@@ -465,7 +473,14 @@ def build_complaint_documents_from_hits(
             print(f"[DEBUG] description={d.get('description')}")
             print(f"[DEBUG] document_number={d.get('document_number')}")            
             pdf_url = _abs_url(d.get("filepath_local") or "")
+            print(f"[DEBUG] RECAP PDF URL: {pdf_url}")
             snippet = extract_pdf_text(pdf_url, max_chars=3000) if pdf_url else ""
+
+            if pdf_url and not snippet:
+                print("[ERROR] PDF parsing FAILED (RECAP)")
+                print(f"[ERROR] URL: {pdf_url}")
+            elif snippet:
+                print(f"[DEBUG] PDF parsing SUCCESS length={len(snippet)}")
 
             p_ex, d_ex = extract_parties_from_caption(snippet) if snippet else ("미확인", "미확인")
             causes = detect_causes(snippet) if snippet else []
@@ -617,7 +632,8 @@ def build_case_summary_from_docket_id(docket_id: int) -> Optional[CLCaseSummary]
     
     # 4️⃣ PDF 텍스트 분석
     if complaint_link:
-        print(f"[DEBUG] Extracting PDF text from: {complaint_link}")        
+        print(f"[DEBUG] Extracting PDF text from: {complaint_link}")     
+        print(f"[DEBUG] Starting PDF extraction...")        
         snippet = extract_pdf_text(complaint_link, max_chars=4000)
 
         print(f"[DEBUG] PDF snippet length={len(snippet) if snippet else 0}")
@@ -628,7 +644,13 @@ def build_case_summary_from_docket_id(docket_id: int) -> Optional[CLCaseSummary]
             print("[DEBUG] ===== PDF TEXT PREVIEW END =====")
         else:
             print("[DEBUG] PDF text extraction returned EMPTY STRING")
-        
+            print("[ERROR] PDF text extraction FAILED")
+            print(f"[ERROR] complaint_link={complaint_link}")
+            print("[ERROR] Possible causes:")
+            print("  - 403 Access denied")
+            print("  - Non-PDF response")
+            print("  - Corrupted file")
+
         print(f"[DEBUG] PDF snippet length={len(snippet) if snippet else 0}")        
         if snippet:
             extracted_ai_snippet = extract_ai_training_snippet(snippet) or ""
