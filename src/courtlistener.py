@@ -527,19 +527,49 @@ def build_case_summary_from_docket_id(docket_id: int) -> Optional[CLCaseSummary]
     extracted_ai_snippet = ""    
     
     # ======================================================
-    # 🔥 UNIFIED LOGIC
-    # build_complaint_documents_from_hits와 동일하게
-    # HTML fallback 방식만 사용
+    # 🔥 통합 LOGIC
+    # RECAP 문서 API 우선 → 없으면 HTML fallback
+    # 그리고 결과를 RECAP 테이블 컬럼에 직접 매핑
     # ======================================================
 
-    html_pdf_url = _extract_first_pdf_from_docket_html(docket_id)
+    # 1️⃣ RECAP API 먼저 시도
+    recap_docs = []
+    url = RECAP_DOCS_URL
+    params = {"docket": docket_id, "page_size": 100}
 
-    if html_pdf_url:
-        complaint_link = html_pdf_url
-        complaint_doc_no = "1"
-        complaint_type = "Original"
+    while url:
+        data = _get(url, params=params) if params else _get(url)
+        params = None
+        if not data:
+            break
+        recap_docs.extend(data.get("results", []))
+        url = data.get("next")
 
-        snippet = extract_pdf_text(html_pdf_url, max_chars=4000)
+    complaint_doc = None
+
+    for d in recap_docs:
+        desc = _safe_str(d.get("description")).lower()
+        if any(k in desc for k in COMPLAINT_KEYWORDS):
+            complaint_doc = d
+            break
+
+    # 2️⃣ RECAP 문서가 있으면 사용
+    if complaint_doc:
+        complaint_doc_no = _safe_str(complaint_doc.get("document_number")) or "1"
+        complaint_link = _abs_url(complaint_doc.get("filepath_local") or "")
+        complaint_type = _detect_complaint_type(_safe_str(complaint_doc.get("description")))
+
+    # 3️⃣ 없으면 HTML fallback
+    if not complaint_link:
+        html_pdf_url = _extract_first_pdf_from_docket_html(docket_id)
+        if html_pdf_url:
+            complaint_link = html_pdf_url
+            complaint_doc_no = "1"
+            complaint_type = "Original"
+
+    # 4️⃣ PDF 텍스트 분석
+    if complaint_link:
+        snippet = extract_pdf_text(complaint_link, max_chars=4000)
         if snippet:
             extracted_ai_snippet = extract_ai_training_snippet(snippet) or ""
             causes_list = detect_causes(snippet)
