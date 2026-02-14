@@ -372,6 +372,41 @@ def build_complaint_documents_from_hits(
             url = data.get("next")
     
         print(f"[DEBUG] total RECAP docs fetched={len(docs)}")
+
+        # =====================================================
+        # 🔥 NEW: RECAP API 실패 시 HTML fallback
+        # =====================================================
+        if not docs:
+            print("[DEBUG] RECAP empty → HTML fallback activated")
+            html_pdf_url = _extract_first_pdf_from_docket_html(did)
+
+            if html_pdf_url:
+                snippet = extract_pdf_text(html_pdf_url, max_chars=3000)
+
+                p_ex, d_ex = extract_parties_from_caption(snippet) if snippet else ("미확인", "미확인")
+                causes = detect_causes(snippet) if snippet else []
+                ai_snip = extract_ai_training_snippet(snippet) if snippet else ""
+
+                out.append(CLDocument(
+                    docket_id=did,
+                    docket_number=docket_number,
+                    case_name=case_name,
+                    court=court,
+                    date_filed=_safe_str(docket.get("date_filed"))[:10],
+                    doc_type="Complaint (HTML Fallback)",
+                    doc_number="1",
+                    description="Extracted from docket HTML",
+                    document_url=html_pdf_url,
+                    pdf_url=html_pdf_url,
+                    pdf_text_snippet=snippet,
+                    extracted_plaintiff=p_ex,
+                    extracted_defendant=d_ex,
+                    extracted_causes=", ".join(causes) if causes else "미확인",
+                    extracted_ai_snippet=ai_snip,
+                ))
+
+            continue
+        
         for d in docs:
             desc = _safe_str(d.get("description")).lower()
             if not any(k in desc for k in COMPLAINT_KEYWORDS):
