@@ -151,7 +151,7 @@ def _get(url: str, params: Optional[dict] = None) -> Optional[dict]:
         print(f"[DEBUG] SUCCESS {url} status={r.status_code}")        
         return r.json()
     except Exception:
-        print(f"[DEBUG] EXCEPTION in _get: {e}")        
+        print(f"[DEBUG] EXCEPTION in _get function.")        
         return None
 
 
