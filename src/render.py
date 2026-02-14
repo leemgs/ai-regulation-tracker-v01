@@ -134,7 +134,6 @@ def render_markdown(
             lines.append(f"| {_esc(k)} | **{v}** |")
         # 총 개수 추가
         total_count = sum(counter.values())
-        lines.append("|---|---|")
         lines.append(f"| **총개수** | **{total_count}** |")            
         lines.append("")
 
