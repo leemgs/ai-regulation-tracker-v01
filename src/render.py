@@ -137,19 +137,20 @@ def render_markdown(
         lines.append(f"| **총개수** | **{total_count}** |")            
         lines.append("")
 
-    # AI 소송 Top3 (업데이트 기준)
+    # AI 소송 Top3 (업데이트 날짜 기준)
     if cl_cases:
-        print(f"[DEBUG] '최근 소송 Top 3 (업데이트 기준)' is printed.")        
-        lines.append("## 🧠 최근 소송 Top 3 (업데이트 기준)\n")
+        print(f"[DEBUG] '최근 소송 Top 3 (업데이트 날짜 기준)' is printed.")        
+        lines.append("## 🧠 최근 소송 Top 3 (업데이트 날짜 기준)\n")
         lines.append("```")        
         top_cases = sorted(
             cl_cases,
-            key=lambda x: x.date_filed,
+            key=lambda x: x.recent_updates or "",
             reverse=True
         )[:3]
 
         for idx, c in enumerate(top_cases, start=1):
-            lines.append(f"({idx}) {_esc(c.case_name)}")
+            update_date = _esc(c.recent_updates or "미확인")
+            lines.append(f"({idx}) {update_date}, {_esc(c.case_name)}")
             lines.append(f"   - {_short(c.extracted_ai_snippet, 120)}")
             lines.append("")
 
