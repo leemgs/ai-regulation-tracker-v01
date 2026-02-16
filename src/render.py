@@ -190,16 +190,7 @@ def render_markdown(
             if d.docket_id:
                 doc_map[d.docket_id] = d
         
-        copyright_cases = []
-        other_cases = []
-
-        for c in cl_cases:
-            if "820" in (c.nature_of_suit or ""):
-                copyright_cases.append(c)
-            else:
-                other_cases.append(c)
-
-        def render_case_table(cases: List[CLCaseSummary]):
+        lines.append("## ⚖️ RECAP\n")
             lines.append(
                 "| No. | 상태 | 케이스명 | 도켓번호 | Nature | 위험도 | "
                 "소송이유 | AI학습관련 핵심주장 | 법적 근거 | 담당판사 | 법원 | "
@@ -207,19 +198,17 @@ def render_markdown(
             )
             lines.append(_md_sep(14))
 
-            for idx, c in enumerate(sorted(cases, key=lambda x: x.date_filed, reverse=True), start=1):
-                # 최근 도켓 업데이트 기준 내림차순 정렬
-                sorted_cases = sorted(
-                    cases,
-                    key=lambda x: x.recent_updates or "",
-                    reverse=True
-                )
+        # 최근 업데이트 기준 내림차순 정렬
+        sorted_cases = sorted(
+            cl_cases,
+            key=lambda x: x.recent_updates or "",
+            reverse=True
+        )
 
-            for idx, c in enumerate(sorted_cases, start=1):                
+        for idx, c in enumerate(sorted_cases, start=1):             
                 slug = _slugify_case_name(c.case_name)
                 docket_url = f"https://www.courtlistener.com/docket/{c.docket_id}/{slug}/"
       
-                # CLDocument 기반 Complaint 정보 덮어쓰기
                 complaint_doc_no = c.complaint_doc_no
                 complaint_link = c.complaint_link
                 extracted_causes = c.extracted_causes
@@ -272,12 +261,20 @@ def render_markdown(
                 print(f"        extracted_causes_len={len(c.extracted_causes or '')}")
                 print(f"        extracted_ai_len={len(c.extracted_ai_snippet or '')}")
 
+                # =====================================================
+                # NEW: Nature 필드 강조 처리
+                # - 820 Copyright → 빨간색 표시
+                # =====================================================
+                nature_display = _esc(c.nature_of_suit)
+                if (c.nature_of_suit or "").strip() == "820 Copyright":
+                    nature_display = '<span style="color:red"><strong>820 Copyright</strong></span>'
+
                 lines.append(
                     f"| {idx} | "
                     f"{_esc(c.status)} | "
                     f"{_mdlink(c.case_name, docket_url)} | "
                     f"{_mdlink(c.docket_number, docket_url)} | "
-                    f"{_esc(c.nature_of_suit)} | "
+                    f"{nature_display} | "
                     f"{format_risk(score)} | "
                     f"{_short(extracted_causes, 120)} | "
                     f"{_short(extracted_ai_snippet, 120)} | "
@@ -288,20 +285,6 @@ def render_markdown(
                     f"{complaint_link_display} | "
                     f"{_esc(c.recent_updates)} |"
                 )
-
-        lines.append("## ⚖️ RECAP 1/2 (820 Copyright)\n")
-        if copyright_cases:
-            print(f"[DEBUG] 'RECAP 1/2: 820 Copyright' is printed.")     
-            render_case_table(copyright_cases)
-        else:
-            lines.append("820 사건 없음\n")
-
-        lines.append("## ⚖️ RECAP 2/2 (Others)\n")
-        if other_cases:
-            print(f"[DEBUG] 'RECAP 2/2: Others' is printed.")                
-            render_case_table(other_cases)
-        else:
-            lines.append("Others 사건 없음\n")
 
     # RECAP 법원 문서 (.pdf format)
     if cl_docs:
