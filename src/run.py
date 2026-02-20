@@ -211,7 +211,7 @@ def main() -> None:
         current_md = md
 
         # 외부 기사 처리
-        news_section = extract_section(current_md, "## 📰 Cases")
+        news_section = extract_section(current_md, "## 📰 News")
         headers, rows, table_meta = parse_table(news_section)
 
         new_article_count = 0
