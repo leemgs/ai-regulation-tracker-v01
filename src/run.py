@@ -122,7 +122,7 @@ def main() -> None:
    
 
     # =========================================================
-    # Base Snapshot 비교 로직
+    # Baseline 비교 로직
     # =========================================================
     comments = list_comments(owner, repo, gh_token, issue_no)
     first_run_today = len(comments) == 0
@@ -311,10 +311,10 @@ def main() -> None:
         summary_header = (
             "### 중복 제거 요약:\n"
             "🔁 Dedup Summary\n"
-            f"└ News {base_news} (Base snapshot): "
+            f"└ News {base_news} (Baseline): "
             f"{dup_news} (Dup), "
             f"{new_article_count} (New)\n"
-            f"└ Cases {base_cases} (Base snapshot): "
+            f"└ Cases {base_cases} (Baseline): "
             f"{dup_cases} (Dup), "
             f"{new_docket_count} (New)\n\n"
         )
