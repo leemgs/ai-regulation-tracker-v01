@@ -1,4 +1,4 @@
-name: lawsuit-monitor
+name: regulation-monitor
 permissions:
   contents: read
   issues: write
