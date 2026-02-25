@@ -90,7 +90,7 @@ def build_regulations_from_news(news_items, known_cases, lookback_days: int = 3)
 
         hay = (item.title + " " + text)
         lower = hay.lower()
-        if not any(k in lower for k in ["regulation", "governance", "act", "policy", "bill", "copyright", "lawsuit", "sued", "규제", "거버넌스", "기본법", "정책"]):
+        if not any(k in lower for k in ["regulation", "governance", "act", "policy", "bill", "copyright", "dispute", "legal", "규제", "거버넌스", "기본법", "정책"]):
             debug_log(f"Skipped non-relevant news: {item.title[:60]}...")
             continue
 

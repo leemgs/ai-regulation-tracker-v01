@@ -66,7 +66,7 @@ Repository → Settings → Secrets and variables → Actions → New repository
 | 강력한 규제 조치 | Penalty, Fines, Prohibit, 처벌, 금지 등 | +30 |
 | 글로벌 규제 프레임워크 | EU AI Act, Governance, 가이드라인 등 | +15 |
 | 저작권/IP 관련 규제 | Copyright, Intellectual Property, 저작권 등 | +15 |
-| 소송 및 분쟁 관련 | Lawsuit, Litigation, 소송, 분쟁 등 | +10 |
+| 법적 분쟁 및 규제 조치 | Regulation, Litigation, 소송, 분쟁 등 | +10 |
 
 - **80~100 🔥**: 법적 구속력 발생 및 고강도 제재 (운영 중단 위험)
 - **60~79 ⚠️**: 법안 발의 및 정부 차원의 강력 권고/가이드라인

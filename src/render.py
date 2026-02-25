@@ -60,8 +60,8 @@ def calculate_regulation_intensity_score(title: str, reason: str) -> int:
     if any(k in text for k in ["copyright", "intellectual property", "ip", "infringement", "저작권", "지식재산권"]):
         score += 15
         
-    # 5. 소송 및 분쟁 관련 (+10)
-    if any(k in text for k in ["lawsuit", "litigation", "sued", "dispute", "소송", "분쟁"]):
+    # 5. 법적 분쟁 및 규제 조치 (+10)
+    if any(k in text for k in ["regulation", "litigation", "legal", "dispute", "소송", "분쟁", "규제"]):
         score += 10
 
     return min(score, 100)
@@ -155,7 +155,7 @@ def render_markdown(
     lines.append("| 강력한 규제 조치 | Penalty, Fines, Prohibit, 금지 등 | +30 |")
     lines.append("| 글로벌 규제 프레임워크 | EU AI Act, Governance, 가이드라인 등 | +15 |")
     lines.append("| 저작권/IP 관련 규제 | Copyright, Intellectual Property, 저작권 등 | +15 |")
-    lines.append("| 소송 및 분쟁 관련 | Lawsuit, Litigation, 소송 등 | +10 |")
+    lines.append("| 법적 분쟁 및 규제 조치 | Regulation, Litigation, 소송 등 | +10 |")
     lines.append("")
 
     lines.append("</details>\n")
