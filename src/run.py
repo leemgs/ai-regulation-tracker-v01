@@ -87,28 +87,29 @@ def main() -> None:
     # ============================================
 
     slack_lines = []
-    slack_lines.append(":막대_차트: AI 규제/정책 모니터링")
-    slack_lines.append(f":시계_3시: {timestamp}")
+    slack_lines.append("🤖 *AI 규제/정책 모니터링*")
+    slack_lines.append(f"🕒 {timestamp}")
     slack_lines.append("")
 
     # 중복 제거 요약 (있을 경우만)
     if dedup_stats:
         new_news = dedup_stats["new_news"]
-        new_label = f"{new_news} (New)"
         if new_news > 0:
-            new_label = f"🔴 *{new_label}*"
+            new_status = f"🔴 *{new_news} (New)*"
+        else:
+            new_status = f"⚪ {new_news} (New)"
         
-        slack_lines.append(":반복: Dedup Summary")
-        slack_lines.append(f"└ News {dedup_stats['base_news']} (Baseline): {dedup_stats['dup_news']} (Dup), {new_label}")
+        slack_lines.append("🔄 *Deduplication Summary*")
+        slack_lines.append(f"└ News: {dedup_stats['base_news']} (Base) / {dedup_stats['dup_news']} (Dup) / {new_status}")
         slack_lines.append("")
 
-    # :상승세인_차트: Collection Status
-    slack_lines.append(":상승세인_차트: Collection Status")
-    slack_lines.append(f"└ News: {len(regulations)}")
+    # Collection Status
+    slack_lines.append("📊 *Collection Status*")
+    slack_lines.append(f"└ News: {len(regulations)} items total")
     slack_lines.append("")
 
-    # :링크: GitHub
-    slack_lines.append(f":링크: GitHub: <{issue_url}|#{issue_no}>")
+    # GitHub
+    slack_lines.append(f"🔗 *GitHub:* <{issue_url}|#{issue_no}>")
     try:
         post_to_slack(slack_webhook, "\n".join(slack_lines))
         debug_log(f"Slack 전송 완료")
